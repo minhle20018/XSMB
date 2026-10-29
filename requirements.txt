@@ -1,6 +1,6 @@
-Flask==3.0.2
-requests==2.31.0
-beautifulsoup4==4.12.3
-numpy==1.26.4
-python-telegram-bot==20.8
-gunicorn==21.2.0
+flask
+gunicorn
+requests
+beautifulsoup4
+python-telegram-bot
+numpy
