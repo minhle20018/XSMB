@@ -1,6 +1,5 @@
 from datetime import datetime
 import os
-import threading
 import bs4
 from flask import Flask, jsonify, render_template_string, request
 import numpy as np
@@ -16,6 +15,9 @@ from telegram.ext import (
 
 app = Flask(__name__)
 TELEGRAM_TOKEN = "9125285476:AAGKHXS_l9tCNwg0NlQ3jtZRxTIBkCPFJzA"
+
+# Khởi tạo Telegram Bot Application toàn cục
+telegram_app = None
 
 
 def get_dashboard_data(date_str):
@@ -109,46 +111,77 @@ def api_results():
   return jsonify(get_dashboard_data(date_val))
 
 
-async def tg_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  text = update.message.text.strip()
-  target_date = datetime.now().strftime("%Y-%m-%d")
+# Endpoint nhận Webhook trực tiếp từ Telegram (Giải quyết triệt để lỗi không phản hồi trên Cloud)
+@app.route(f"/webhook/{TELEGRAM_TOKEN}", methods=["POST"])
+def webhook():
+  if request.method == "POST":
+    update = Update.de_json(request.get_json(force=True), telegram_app.bot)
+    # Xử lý tin nhắn đồng bộ/bất đồng bộ gọn gàng
+    import asyncio
+
+    async def process():
+      await telegram_app.process_update(update)
+
+    asyncio.run(process())
+    return "OK"
+  return "OK"
+
+
+# Khởi tạo Bot Telegram và tự động đăng ký Webhook với Render khi ứng dụng khởi chạy
+def setup_telegram_bot():
+  global telegram_app
   try:
-    import re
+    import asyncio
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
-    match = re.search(r"(\d{1,2})[-/](\d{1,2})[-/](\d{4})", text)
-    if match:
-      d, m, y = match.groups()
-      target_date = f"{y}-{m.zfill(2)}-{d.zfill(2)}"
-  except Exception:
-    pass
+    telegram_app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
-  data = get_dashboard_data(target_date)
-  msg = (
-      f"🎯 *KẾT QUẢ PHÂN TÍCH XỔ SỐ ({data['date']})*\n\n"
-      f"👑 *Độc Thủ Lô VIP:* ⭐ *{data['best']}* (Xác suất:"
-      f" {data['best_prob']}%)\n"
-      f"🔥 *Song Thủ Lô:* {data['best']} - {data['pair2']}\n"
-      f"📊 *Dàn 4 Số:* {', '.join(data['set4'])}\n\n"
-      f"🏢 *VMAH AI SOLUTIONS*"
-  )
-  await update.message.reply_text(msg, parse_mode="Markdown")
+    async def tg_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+      text = update.message.text.strip()
+      target_date = datetime.now().strftime("%Y-%m-%d")
+      try:
+        import re
 
+        match = re.search(r"(\d{1,2})[-/](\d{1,2})[-/](\d{4})", text)
+        if match:
+          d, m, y = match.groups()
+          target_date = f"{y}-{m.zfill(2)}-{d.zfill(2)}"
+      except Exception:
+        pass
 
-def run_telegram_bot():
-  try:
-    bot_app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-    bot_app.add_handler(CommandHandler("start", tg_handler))
-    bot_app.add_handler(CommandHandler("xem", tg_handler))
-    bot_app.add_handler(
+      data = get_dashboard_data(target_date)
+      msg = (
+          f"🎯 *KẾT QUẢ PHÂN TÍCH XỔ SỐ ({data['date']})*\n\n"
+          f"👑 *Độc Thủ Lô VIP:* ⭐ *{data['best']}* (Xác suất:"
+          f" {data['best_prob']}%)\n"
+          f"🔥 *Song Thủ Lô:* {data['best']} - {data['pair2']}\n"
+          f"📊 *Dàn 4 Số:* {', '.join(data['set4'])}\n\n"
+          f"🏢 *VMAH AI SOLUTIONS*"
+      )
+      await update.message.reply_text(msg, parse_mode="Markdown")
+
+    telegram_app.add_handler(CommandHandler("start", tg_handler))
+    telegram_app.add_handler(CommandHandler("xem", tg_handler))
+    telegram_app.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, tg_handler)
     )
-    bot_app.run_polling()
-  except Exception as e:
-    print(f"Lỗi Bot: {e}")
 
+    loop.run_until_complete(telegram_app.initialize())
+
+    # Tự động cấu hình Webhook trỏ thẳng tới Render URL của bạn
+    render_url = os.environ.get("RENDER_EXTERNAL_URL")
+    if render_url:
+      webhook_url = f"{render_url}/webhook/{TELEGRAM_TOKEN}"
+      loop.run_until_complete(telegram_app.bot.set_webhook(url=webhook_url))
+      print(f"Webhook đã được thiết lập tự động tới: {webhook_url}")
+  except Exception as e:
+    print(f"Lỗi khởi tạo Bot: {e}")
+
+
+# Chạy hàm khởi tạo bot ngay khi Flask start
+setup_telegram_bot()
 
 if __name__ == "__main__":
-  t = threading.Thread(target=run_telegram_bot, daemon=True)
-  t.start()
   port_val = int(os.environ.get("PORT", 5001))
   app.run(host="0.0.0.0", port=port_val, debug=False)
