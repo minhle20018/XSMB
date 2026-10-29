@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 import threading
 import bs4
 from flask import Flask, jsonify, render_template_string, request
@@ -189,7 +190,6 @@ async def tg_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   except Exception:
     pass
 
-  # Gọi trực tiếp hàm lấy dữ liệu, KHÔNG gọi qua localhost nữa
   data = get_dashboard_data(target_date)
   ml = data["ai_data"]
   msg = (
@@ -218,4 +218,5 @@ def run_telegram_bot():
 if __name__ == "__main__":
   t = threading.Thread(target=run_telegram_bot, daemon=True)
   t.start()
-  app.run(debug=False, port=5001)
+  port_val = int(os.environ.get("PORT", 5001))
+  app.run(host="0.0.0.0", port=port_val, debug=False)
