@@ -27,7 +27,12 @@ def get_dashboard_data(date_str):
 
   best = f"{(current_seed % 89 + 10):02d}"
   pair2 = f"{((current_seed + 5) % 89 + 10):02d}"
-  set4 = [best, pair2, f"{((current_seed + 2) % 89 + 10):02d}", f"{((current_seed + 9) % 89 + 10):02d}"]
+  set4 = [
+      best,
+      pair2,
+      f"{((current_seed + 2) % 89 + 10):02d}",
+      f"{((current_seed + 9) % 89 + 10):02d}",
+  ]
 
   try:
     dt = datetime.strptime(date_str, "%Y-%m-%d")
@@ -37,7 +42,11 @@ def get_dashboard_data(date_str):
     res = requests.get(url, headers=headers, timeout=4)
     if res.status_code == 200:
       soup = bs4.BeautifulSoup(res.text, "html.parser")
-      numbers = [td.get_text(strip=True) for td in soup.find_all("td", class_=["v-giai", "giai"]) if td.get_text(strip=True)]
+      numbers = [
+          td.get_text(strip=True)
+          for td in soup.find_all("td", class_=["v-giai", "giai"])
+          if td.get_text(strip=True)
+      ]
       if len(numbers) >= 2:
         return {
             "date": date_str,
@@ -105,6 +114,7 @@ async def tg_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   target_date = datetime.now().strftime("%Y-%m-%d")
   try:
     import re
+
     match = re.search(r"(\d{1,2})[-/](\d{1,2})[-/](\d{4})", text)
     if match:
       d, m, y = match.groups()
@@ -115,7 +125,8 @@ async def tg_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   data = get_dashboard_data(target_date)
   msg = (
       f"🎯 *KẾT QUẢ PHÂN TÍCH XỔ SỐ ({data['date']})*\n\n"
-      f"👑 *Độc Thủ Lô VIP:* ⭐ *{data['best']}* (Xác suất: {data['best_prob']}%)\n"
+      f"👑 *Độc Thủ Lô VIP:* ⭐ *{data['best']}* (Xác suất:"
+      f" {data['best_prob']}%)\n"
       f"🔥 *Song Thủ Lô:* {data['best']} - {data['pair2']}\n"
       f"📊 *Dàn 4 Số:* {', '.join(data['set4'])}\n\n"
       f"🏢 *VMAH AI SOLUTIONS*"
@@ -128,7 +139,9 @@ def run_telegram_bot():
     bot_app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     bot_app.add_handler(CommandHandler("start", tg_handler))
     bot_app.add_handler(CommandHandler("xem", tg_handler))
-    bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, tg_handler))
+    bot_app.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, tg_handler)
+    )
     bot_app.run_polling()
   except Exception as e:
     print(f"Lỗi Bot: {e}")
