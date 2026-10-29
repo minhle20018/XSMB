@@ -73,13 +73,15 @@ def get_dashboard_data(date_str):
           for td in soup.find_all("td", class_=["v-giai", "giai"])
           if td.get_text(strip=True)
       ]
-      if len(numbers) >= 26:
+      if len(numbers) >= 27:
         return {
             "status": "success",
             "source": "Minh Ngoc Live & AI Engine",
             "date": date_str,
             "db": numbers[0],
             "g1": numbers[1],
+            "g2": f"{numbers[2]} — {numbers[3]}",
+            "g3": f"{numbers[4]} — {numbers[5]} — {numbers[6]} — {numbers[7]} — {numbers[8]} — {numbers[9]}",
             "loto1": ai_data["best"],
             "loto1_prob": ai_data["best_prob"],
             "loto2": ai_data["pair2"],
@@ -96,6 +98,8 @@ def get_dashboard_data(date_str):
       "date": date_str,
       "db": f"{np.random.randint(10000, 99999)}",
       "g1": f"{np.random.randint(10000, 99999)}",
+      "g2": f"{np.random.randint(10000, 99999)} — {np.random.randint(10000, 99999)}",
+      "g3": f"Đang cập nhật",
       "loto1": ai_data["best"],
       "loto1_prob": ai_data["best_prob"],
       "loto2": ai_data["pair2"],
@@ -143,6 +147,7 @@ HTML_TEMPLATE = """
             <table>
                 <tr><th>Đặc Biệt</th><td id="db" style="color: #ef4444; font-size: 18px;">--</td></tr>
                 <tr><th>Giải Nhất</th><td id="g1">--</td></tr>
+                <tr><th>Giải Nhì</th><td id="g2">--</td></tr>
             </table>
         </div>
     </div>
@@ -159,6 +164,7 @@ HTML_TEMPLATE = """
             document.getElementById('pairs').innerText = json.loto1 + " - " + json.loto2;
             document.getElementById('db').innerText = json.db;
             document.getElementById('g1').innerText = json.g1;
+            document.getElementById('g2').innerText = json.g2;
         }
     </script>
 </body>
