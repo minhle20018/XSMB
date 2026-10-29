@@ -15,11 +15,9 @@ from telegram.ext import (
 
 app = Flask(__name__)
 
-# ĐIỀN TOKEN TELEGRAM BOT CỦA BẠN VÀO ĐÂY:
 TELEGRAM_TOKEN = "9125285476:AAGKHXS_l9tCNwg0NlQ3jtZRxTIBkCPFJzA"
 
 
-# --- THUẬT TOÁN TÍNH TOÁN XÁC SUẤT AI ---
 def calculate_advanced_predictions(date_str):
   try:
     current_seed = int(date_str.replace("-", ""))
@@ -81,31 +79,6 @@ def get_dashboard_data(date_str):
             "date": date_str,
             "db": numbers[0],
             "g1": numbers[1],
-            "g2_1": numbers[2],
-            "g2_2": numbers[3],
-            "g3_1": numbers[4],
-            "g3_2": numbers[5],
-            "g3_3": numbers[6],
-            "g3_4": numbers[7],
-            "g3_5": numbers[8],
-            "g3_6": numbers[9],
-            "g4_1": numbers[10],
-            "g4_2": numbers[11],
-            "g4_3": numbers[12],
-            "g4_4": numbers[13],
-            "g5_1": numbers[14],
-            "g5_2": numbers[15],
-            "g5_3": numbers[16],
-            "g5_4": numbers[17],
-            "g5_5": numbers[18],
-            "g5_6": numbers[19],
-            "g6_1": numbers[20],
-            "g6_2": numbers[21],
-            "g6_3": numbers[22],
-            "g7_1": numbers[23],
-            "g7_2": numbers[24],
-            "g7_3": numbers[25],
-            "g7_4": numbers[26],
             "loto1": ai_data["best"],
             "loto1_prob": ai_data["best_prob"],
             "loto2": ai_data["pair2"],
@@ -122,31 +95,6 @@ def get_dashboard_data(date_str):
       "date": date_str,
       "db": f"{np.random.randint(10000, 99999)}",
       "g1": f"{np.random.randint(10000, 99999)}",
-      "g2_1": f"{np.random.randint(10000, 99999)}",
-      "g2_2": f"{np.random.randint(10000, 99999)}",
-      "g3_1": f"{np.random.randint(10000, 99999)}",
-      "g3_2": f"{np.random.randint(10000, 99999)}",
-      "g3_3": f"{np.random.randint(10000, 99999)}",
-      "g3_4": f"{np.random.randint(10000, 99999)}",
-      "g3_5": f"{np.random.randint(10000, 99999)}",
-      "g3_6": f"{np.random.randint(10000, 99999)}",
-      "g4_1": f"{np.random.randint(1000, 9999)}",
-      "g4_2": f"{np.random.randint(1000, 9999)}",
-      "g4_3": f"{np.random.randint(1000, 9999)}",
-      "g4_4": f"{np.random.randint(1000, 9999)}",
-      "g5_1": f"{np.random.randint(1000, 9999)}",
-      "g5_2": f"{np.random.randint(1000, 9999)}",
-      "g5_3": f"{np.random.randint(1000, 9999)}",
-      "g5_4": f"{np.random.randint(1000, 9999)}",
-      "g5_5": f"{np.random.randint(1000, 9999)}",
-      "g5_6": f"{np.random.randint(1000, 9999)}",
-      "g6_1": f"{np.random.randint(100, 999)}",
-      "g6_2": f"{np.random.randint(100, 999)}",
-      "g6_3": f"{np.random.randint(100, 999)}",
-      "g7_1": f"{np.random.randint(10, 99)}",
-      "g7_2": f"{np.random.randint(10, 99)}",
-      "g7_3": f"{np.random.randint(10, 99)}",
-      "g7_4": f"{np.random.randint(10, 99)}",
       "loto1": ai_data["best"],
       "loto1_prob": ai_data["best_prob"],
       "loto2": ai_data["pair2"],
@@ -154,7 +102,6 @@ def get_dashboard_data(date_str):
   }
 
 
-# --- GIAO DIỆN WEB HTML ---
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="vi">
@@ -162,7 +109,7 @@ HTML_TEMPLATE = """
     <meta charset="UTF-8">
     <title>VMAH AI SOLUTIONS - PRO v3.0</title>
     <style>
-        :root { --bg-dark: #0f172a; --bg-card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --muted: #94a3b8; }
+        :root { --bg-dark: #0f172a; --bg-card: #1e293b; --accent: #38bdf8; --text: #f8fafc; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg-dark); color: var(--text); padding: 24px; }
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background: var(--bg-card); padding: 16px 24px; border-radius: 12px; border: 1px solid #334155; }
@@ -180,7 +127,7 @@ HTML_TEMPLATE = """
 <body>
     <header>
         <h1>VMAH AI SOLUTIONS - PRO v3.0</h1>
-        <span>● Hệ thống đang hoạt động</span>
+        <span>● Hệ thống đang hoạt động trực tuyến</span>
     </header>
     <div class="container">
         <div class="card">
@@ -229,7 +176,6 @@ def api_results():
   return jsonify(get_dashboard_data(date_val))
 
 
-# --- TÍCH HỢP TELEGRAM BOT CHẠY NGẦM ---
 async def tg_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   text = update.message.text.strip()
   target_date = datetime.now().strftime("%Y-%m-%d")
@@ -243,6 +189,7 @@ async def tg_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
   except Exception:
     pass
 
+  # Gọi trực tiếp hàm lấy dữ liệu, KHÔNG gọi qua localhost nữa
   data = get_dashboard_data(target_date)
   ml = data["ai_data"]
   msg = (
@@ -269,15 +216,6 @@ def run_telegram_bot():
 
 
 if __name__ == "__main__":
-  # Khởi động Bot Telegram chạy ngầm bằng luồng riêng (Thread)
   t = threading.Thread(target=run_telegram_bot, daemon=True)
   t.start()
-
-  print(
-      "🚀 [UNIFIED SERVER] Web Dashboard đang chạy tại http://127.0.0.1:5001"
-  )
-  print(
-      "🤖 [TELEGRAM BOT] Đã kích hoạt chạy ngầm cùng hệ thống, sẵn sàng nhận"
-      " lệnh!"
-  )
   app.run(debug=False, port=5001)
